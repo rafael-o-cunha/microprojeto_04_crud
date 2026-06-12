@@ -1,6 +1,7 @@
-# microprojeto_04_crud
-- java + jsp + servlet + jdbc + postgree
-- java + jsf + primefaces + Hibernate + postgree
-- java + springboot + jpa + postgree
-- Node.js + express + postgree
-- NOde.js + nest.js + postgree
+# CRUD Java + Springboot + JPA
+
+
+
+criar um microprojeto spring para realizar crud
+
+criar rotas de API, não acoplar frontend
