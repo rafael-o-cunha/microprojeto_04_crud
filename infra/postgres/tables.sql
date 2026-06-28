@@ -5,7 +5,6 @@ create table tb_pets (
 	name varchar(120) not null,
 	species varchar(50) not null,
 	breed varchar(120),
-	age integer,
 	color varchar(80),
 	weight numeric(10,2),
 	vaccinated boolean default false,

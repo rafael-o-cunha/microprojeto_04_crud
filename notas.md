@@ -1,3 +1,8 @@
+## ***Um Aviso Importante***
+
+> O Código apresentado aqui está longe de ser perfeito. Meu foco será exclusivamente na prática de funcionalidades CRUD realizando um sobrevoo na estrutura de projeto e recursos que o framework Spring Boot oferece, que é o tema central deste artigo. Então, caro programador experiente que está lendo isso, peço que não se preocupe demais com outras questões como arquitetura ou boas práticas. foco no essencial!
+
+
 ## Criar, configurar e iniciar o projeto (1)
 
 ### Setup base
@@ -9,7 +14,6 @@ Criei o projeto com: [1]
 - group: praticas
 - artifact: microprojeto-04
 - package name: praticas.microprojeto-42
-
 
 - [X] configurar containers (aplicação e banco de dados)
 - [X] iniciar projeto springboot
@@ -152,6 +156,9 @@ mvn archetype:generate \
 ## Criar estrutura em camadas "MVC" e configurar Eclipse (2)
 
 - [X] criar estrutura "MVC" [3]
+
+- O que chamo de MVC é apenas ref ao padrão de camadas, não indica igualdade, mas semelhança. [5]
+
 - [X] criar primeira rota
 - [X] ajustar eclipse para debug da aplicação,
 
@@ -196,8 +203,37 @@ spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
 
+- [X] realizar primeira conexão e consulta ao banco de dados para testar
 
-- [ ] realizar primeira conexão e consulta ao banco de dados para testar
+- Criando Entidade e anotando para refletir a representação que está no banco de dados, farei uso de estrutura pré-existente no banco (criado em etapas anteriores)
+- anotações usadas no mapeamento da entidade:
+- ```java
+  //anotações de classe
+
+  //Anotações do Javax/Jakarta persistence para mapeamento da classe via ORM
+  @Entity		//Informa ao JPA que esta classe representa uma entidade persistida
+  @Table		//Informa qual tabela será utilizada
+
+  //Anotações do LomBok para acelerar o desenvolvimento, ele irá gerar o boilerplate que cada annotation representa.
+  @Getter
+  @Setter
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+
+
+  //anotações de atributos
+  //anotações utilizadas para identificar qual atributo será o ID da classe mapeado para o ID da entidade persistida no banco e qual estratégia é utilizada na geração deste valor pois será gerado automaticamente.
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+  //anotação que identifica cada coluna ta tabela no banco mapeando de acordo com cada atributo da classe, abaixo listo as variações utilizadas: 
+  @Column(name = "name", nullable = false, length = 120) 	//usado em String
+  @Column(name = "weight", precision = 10, scale = 2)	//usado em BiDecimal
+  @Column(name = "nomes", columnDefinition = "TEXT")	//usado em String que conterá texto longo.
+  @Column(name = "created_at", updatable = false)		//usado em LocalDateTime deixando claro que o dado não poderá ser alterado após a gravação no banco.
+  ```
+
 - [X] criar carga de dados no banco de dados
 
 ```bash
@@ -215,7 +251,71 @@ init.sql
 
 ## Criar funcionalidade de consulta de massa de dados (4)
 
-- [ ] criar funcionalidade de consulta de lista de dados
+- [X] criar funcionalidade de consulta de lista de dados [5]
+
+- para esta estapa eu já começo considerando  o "soft delete" onde a consulta deverá trazer sempre os dados ativos, ou deleted = false;
+- a requisição passa por todas as camadas até chegar ao repository que com JPA resolve a consulta já no nome do método. (**Derived Query Methods  ou **Query Methods****)
+  - neste caso foi criado o `findByDeletedFalse()` na interface do repository que extende JpaRepository
+- também farei uso de DTO mantendo o padrão da Stack e como boa prática.
+  - Durante pesquisas vi o uso de configuração e classe de mapeamento assim como uso de MapStruct como dependência para conversão de DTO em Entity  ou Entity para DTO, porém como este é um micro projeto fiz de forma simplificada com builder em um método retornando a outra entidade. [7]
+  - Neste caso foi criado um DTO simples de Response chamado de `PetResponseDTO` e utilizado anotação do LomBok `@Builder` [8]
+- para injeção de dependência geralmente usa-se `@Autowired` em cada dependência no Spring Boot, porém ao usar `@RequiredArgsConstructor` do LomBok na classe é realizado a criação automática do construtor da classe realizando a injeção das dependências pelo construtor, tornando desnecessário o uso da anotação do Spring Boot [9]
+
+
+```Java
+//anotações de classe
+
+//Anotação do Spring Boot
+@RestController					  //Anotação para referenciar ao Spring Boot que esta classe será um controlador REST de forma explícita
+@RequestMapping(value = "/pets")  //Anotação para mapear Web Request para os métodos que receberão requisições (pode ser usada a nível de classe ou de método)
+@Service                          //Anotação para que o container do Spring gerencie a classe de serviço (encapsula a @Component)
+
+//Anotações do LomBok para acelerar o desenvolvimento, ele irá gerar o boilerplate que cada annotation representa.
+@RequiredArgsConstructor //gera construtor padrão e co DI para as dependências(ajuda a evitar @Autowired do Spring Boot))
+@Builder                 //gera automaticamente APIs fluentes para instanciar objetos, eliminando o código boilerplate do construtor
+
+
+//anotações de atributos
+@GetMapping			//anotação usada no método para indicar que ele será usado para Web Request via método Get neste controlador(pode conter query params e value com rota)
+```
+
+
+- o uso do lombok elimina muito código boilerplate e ajuda em outras atividades e padrões de projeto durante o desenvolvimento, o código gerado por ser consultado na pasta target, no caso deste projeto pode ser visto da seguinte forma:
+
+```Shell
+javap -p target/classes/praticas/microprojeto_04/entity/Pet.class
+```
+
+
+- a estrutura atual do projeto com a requisição que lista todos os Pets fica da forma abaixo:
+
+```Shell
+[...]
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── praticas
+│   │   │       └── microprojeto_04
+│   │   │           ├── controller
+│   │   │           │   └── PetController.java
+│   │   │           ├── dto
+│   │   │           │   └── PetResponseDTO.java
+│   │   │           ├── entity
+│   │   │           │   └── Pet.java
+│   │   │           ├── Microprojeto04Application.java
+│   │   │           ├── repository
+│   │   │           │   └── PetRepository.java
+│   │   │           └── service
+│   │   │               └── PetService.java
+[...]
+```
+
+
+- No Controller que servirá os endpoints REST o retorno será do tipo `ResponseEntity` pois ele **representa a resposta HTTP completa** , não apenas o objeto que será serializado em JSON. [10]
+
+  - A ideia de utilizá-lo é para evitar de controlar apenas o corpo da resposta, com isso será possível ter de uma vez o Status HTTP, Cabeçalhos e Corpo representados no objeto e tratados pelo Spring Boot na resposta.
+- a saída para a requisição do Cliente foi um JSON com a lista de PETs cadastrados no pets_db (Postgres)
+
 
 ---
 
@@ -261,20 +361,52 @@ init.sql
 
 [1.2] https://medium.com/@felipeacelinoo/guia-pr%C3%A1tico-para-construir-uma-api-rest-com-spring-boot-e-java-99fa79f62c7
 
-
 [2] https://medium.com/devdomain/using-lombok-in-spring-boot-simplifying-your-code-c38057894cb8
 
 [2.1] https://mmarcosab.medium.com/usando-anota%C3%A7%C3%B5es-do-lombok-em-java-com-springboot-ecbec69234a9
 
 [2.2] https://dicasdeprogramacao.com.br/como-configurar-o-lombok-no-eclipse/
 
-
-
 [3] https://www.youtube.com/watch?v=ZaNVBhZUFIg
 
 [3.1] https://medium.com/@anandjeyaseelan10/spring-boot-project-structure-explained-best-practices-c2ba46ea57eb
 
+[3.2]https://guilherme-manzano.medium.com/anota%C3%A7%C3%B5es-do-curso-spring-boot-jpa-e-hibernate-4be7e6a827c6
 
-[4] https://stackoverflow.com/questions/3835612/remote-debugging-tomcat-with-eclipse 
+[4] https://stackoverflow.com/questions/3835612/remote-debugging-tomcat-with-eclipse
 
 [4.1] https://medium.com/@maneakanksha772/debugging-java-inside-a-docker-container-a-survival-guide-c2eee1655434
+
+[5] [www.geeksforgeeks.org/java/spring-boot-crud-operations](https://www.geeksforgeeks.org/java/spring-boot-crud-operations/) 
+
+[5.1] [dev.to/akash_vadakkeveetil/basic-crud-using-java-spring-boot-2l07](https://dev.to/akash_vadakkeveetil/basic-crud-using-java-spring-boot-2l07)
+
+[6] [medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235](https://medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235) 
+
+[6.1] [www.baeldung.com/spring-data-derived-queries](https://www.baeldung.com/spring-data-derived-queries)
+
+[7] [www.freecodecamp.org/news/what-are-dtos-java](https://www.freecodecamp.org/news/what-are-dtos-java/)
+
+[7.1] [www-baeldung-com.translate.goog/java-dto-pattern?_x_tr_sl=en&amp;_x_tr_tl=pt&amp;_x_tr_hl=pt&amp;_x_tr_pto=tc](https://www-baeldung-com.translate.goog/java-dto-pattern?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc)
+
+[7.2] [www.geeksforgeeks.org/java/spring-boot-map-entity-to-dto-using-modelmapper](https://www.geeksforgeeks.org/java/spring-boot-map-entity-to-dto-using-modelmapper/)
+
+[7.3] [medium.com/mobicareofficial/mapstruct-simplificando-mapeamento-de-dtos-em-java-c29135835c68](https://medium.com/mobicareofficial/mapstruct-simplificando-mapeamento-de-dtos-em-java-c29135835c68)
+
+[7.4] [medium.com/thefreshwrites/mapping-entities-to-dtos-and-vice-versa-in-java-fe126f6bb6b2](https://medium.com/thefreshwrites/mapping-entities-to-dtos-and-vice-versa-in-java-fe126f6bb6b2)
+
+[8] [www.baeldung.com/lombok-builder](https://www.baeldung.com/lombok-builder)
+
+[8.1] [www.baeldung.com/creational-design-patterns#builder](https://www.baeldung.com/creational-design-patterns#builder)
+
+[9] [www.linkedin.com/pulse/comparing-autowired-requiredargsconstructor-software-narang-arora-oygbc](https://www.linkedin.com/pulse/comparing-autowired-requiredargsconstructor-software-narang-arora-oygbc/)
+
+[9.1] [www.baeldung.com/spring-injection-lombok](https://www.baeldung.com/spring-injection-lombok)
+
+[9.2] [www.geeksforgeeks.org/springboot/spring-dependency-injection-autowired-vs-constructor-injection](https://www.geeksforgeeks.org/springboot/spring-dependency-injection-autowired-vs-constructor-injection/)
+
+[10] [medium.com/@mvinodnayak46/introduction-to-responseentity-in-spring-boot-b51cf9eba597](https://medium.com/@mvinodnayak46/introduction-to-responseentity-in-spring-boot-b51cf9eba597)
+
+[10.1] [dev.to/oigorrudel/quando-usar-responseentity-36b6](https://dev.to/oigorrudel/quando-usar-responseentity-36b6)
+
+[10.2] [www.baeldung.com/spring-response-entity](https://www.baeldung.com/spring-response-entity)
