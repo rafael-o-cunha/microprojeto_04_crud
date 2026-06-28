@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import praticas.microprojeto_04.dto.PetResponseDTO;
 import praticas.microprojeto_04.entity.Pet;
+import praticas.microprojeto_04.exception.PetNotFoundException;
 import praticas.microprojeto_04.repository.PetRepository;
 
 @RequiredArgsConstructor
@@ -18,6 +19,12 @@ public class PetService {
 	public List<PetResponseDTO> findAll() {
 		List<Pet> pets = repository.findByDeletedFalse();
 		return pets.stream().map(this::toResponse).toList();
+	}
+	
+	public PetResponseDTO findById(Long id) {
+		Pet pet = repository.findByIdAndDeletedFalse(id)
+				.orElseThrow(() -> new PetNotFoundException(id));
+		return toResponse(pet);
 	}
 	
 	private PetResponseDTO toResponse(Pet pet) {

@@ -321,7 +321,57 @@ javap -p target/classes/praticas/microprojeto_04/entity/Pet.class
 
 ## criar funcionalidade de consultar unidade (5)
 
-- [ ] criar funcionalidade de consultar uma unidade
+- [X] criar funcionalidade de consultar uma unidade
+
+- Nesse caso cai bem o uso de `Optional` para tratar a possibilidade de não ter a informação solicitada e já ficar claro que além de não ter terá um possível NPE tratado. [11]
+- O Uso do Optional neste retorno facilitará o lançamento de exceção caso não exista registro, e a captura para tratamento/interpretação dessa exceção na chamada do endpoint.
+- Inicialmente o endpoint irá retornar status 500 com a exception não tratada adequadamente(como no exemplo abaixo), porém o correto é que a APi tenha tratamento de exceção criado com exceptions personalizadas quando necessário assim como o retorno ideal do status code que pode variar dependendo do contexto.
+
+```JSON
+{
+    "timestamp": "2026-06-28T00:46:35.841Z",
+    "status": 500,
+    "error": "Internal Server Error",
+    "path": "/pets/1000"
+}
+```
+
+- no caso desse microprojeto, para retornar o status code ideal realizei realizei a criação de uma exception personalizada com `ExceptionHandler` para captura, tratamento do retorno para entregar o `Http Status Code` ideal [12]
+- a saída ficou assim:
+
+```
+Pet com o id 1000 não foi encontrado.
+```
+
+- visualizando pelo `Postman` é possível ver que foi emitido o status 404 para a resposta assim como a string de que o registro não foi encontrado, mas como não fica legal só a string mas sim  usar o padrão de Json, decidi dar mais um passo no tratamento da resposta quando essa exceção ocorre para emitir um Json.
+- Criei um `ErrorResponseDTO` pra transportar a resposta entre as camadas até a saída da API de forma limpa e padronizada.
+- alterei o `ExceptionHandler`para montar a resposta dentro do DTO criado com as informações corretas. [13]
+- com ResponseEntity bastou substituir a string de saída pelo DTO criado, a saída agora foi:
+
+```JSON
+{
+    "timestamp": "2026-06-28T01:35:19.393841742",
+    "status": 404,
+    "error": "Not Found",
+    "message": "Pet com o id 1000 não foi encontrado.",
+    "path": "/pets/1000"
+}
+```
+
+- Pra alcançar esse ponto, que é mais satisfatório precisei usar algumas annotations e percebi que o Spring Boot disponibiliza argumentos injetáveis e os resolve quando solicitados [14]
+
+
+
+```Java
+//anotações de classe
+
+//Anotação do Spring Boot
+@RestControllerAdvice   //Faz parte do tratamento de exceções do Spring MVC, indica que a classe contém regras globais para tratar exceções lançadas pelos Controllers REST
+
+//anotações de atributos
+@ExceptionHandler(PetNotFoundException.class)  //diz que o método trata exceções do tipo especificado
+```
+
 
 ---
 
@@ -410,3 +460,23 @@ javap -p target/classes/praticas/microprojeto_04/entity/Pet.class
 [10.1] [dev.to/oigorrudel/quando-usar-responseentity-36b6](https://dev.to/oigorrudel/quando-usar-responseentity-36b6)
 
 [10.2] [www.baeldung.com/spring-response-entity](https://www.baeldung.com/spring-response-entity)
+
+[11] [www-baeldung-com.translate.goog/java-optional?_x_tr_sl=en&amp;_x_tr_tl=pt&amp;_x_tr_hl=pt&amp;_x_tr_pto=tc](https://www-baeldung-com.translate.goog/java-optional?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc)
+
+[11.1] [medium.com/collabcode/como-usar-o-optional-do-java-8-com-a-jpa-hibernate-c1e48a4aa546](https://medium.com/collabcode/como-usar-o-optional-do-java-8-com-a-jpa-hibernate-c1e48a4aa546)
+
+[11.2] [cr.openjdk.org/~dlsmith/jsr335/jsr335-0.6.2/index.html](https://cr.openjdk.org/~dlsmith/jsr335/jsr335-0.6.2/index.html)
+
+[12] [medium.com/localizalabs/404-204-200-qual-status-a-api-deve-retornar-quando-a-resposta-for-vazia-e4b153936398](https://medium.com/localizalabs/404-204-200-qual-status-a-api-deve-retornar-quando-a-resposta-for-vazia-e4b153936398)
+
+[13] [medium.com/@demisgomes/controle-de-exce%C3%A7%C3%B5es-exception-handler-global-no-spring-boot-d780a19996b2](https://medium.com/@demisgomes/controle-de-exce%C3%A7%C3%B5es-exception-handler-global-no-spring-boot-d780a19996b2)
+
+[13.1]  [www.baeldung.com/exception-handling-for-rest-with-spring](https://www.baeldung.com/exception-handling-for-rest-with-spring)
+
+[13.2]  [www.geeksforgeeks.org/springboot/exception-handling-in-spring-boot](https://www.geeksforgeeks.org/springboot/exception-handling-in-spring-boot/)
+
+[13.3] [medium.com/@felipeacelinoo/como-tratar-exce%C3%A7%C3%B5es-em-uma-api-rest-com-spring-boot-utilizando-restcontrolleradvice-e-af6732559d59](https://medium.com/@felipeacelinoo/como-tratar-exce%C3%A7%C3%B5es-em-uma-api-rest-com-spring-boot-utilizando-restcontrolleradvice-e-af6732559d59)
+
+[13.4] [docs.spring.io/spring-framework/reference/web/webflux/controller/ann-advice.html](https://docs.spring.io/spring-framework/reference/web/webflux/controller/ann-advice.html)
+
+[14] [medium.com/@AlexanderObregon/how-spring-boot-configures-custom-argument-resolvers-ed4833420549](https://medium.com/@AlexanderObregon/how-spring-boot-configures-custom-argument-resolvers-ed4833420549)
