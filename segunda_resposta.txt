@@ -1,1 +1,0 @@
-{"timestamp":"2026-06-29T14:16:46.227006152","status":404,"error":"Not Found","message":"O pet com id 5 já está excluído.","path":"/pets/5"}

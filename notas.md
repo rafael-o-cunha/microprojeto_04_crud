@@ -471,10 +471,64 @@ public class Product {}
 
 ## criar cadastro de unidade de registro (9)
 
-- [ ] cadastrar pet
+- [X] cadastrar pet
+
+- ter deixado a criação de recurso por último foi interessante, eu havia criado uma massa de dados e injetado no banco então não precisava começar por este endpoint, e digo que foi interessante pois pude fazer reúso do que já havia sido construído para outros endpoints além é claro do quão simples foi realizá-lo com a facilidade que o framework entrega.
+- conforme MDN/RFC explica fiz com recurso sendo criado e sendo retornado na resposta com status `201` [18]
+- mantive o mesmo padrão do endpoint de update, não fiz validação de entrada, apenas enviei um json válido, pois validação ficará para um próximo microprojeto.
+- json enviado:
+
+```JSON
+    {
+        "name": "Floky",
+        "species": "CAT",
+        "breed": "Crazy",
+        "color":"Orange",
+        "weight":9.0,
+        "vaccinated":false,
+        "birthDate":"2020-03-10",
+        "notes":"Healthy - created"
+    }
+```
 
 
 
+---
+
+## Fechando o microprojeto
+
+- encerrando o micro projeto, acredito que atendeu ao propósito, pude ver ainda que a sequência que usei pra criar os endpoints foi boa.
+- para um projeto pedagógico foi essencial pra aplicar conceitos de desenvolvimento de forma a interagir com o framework depois de tanto tempo e vê-lo assumindo diversas responsabilidades que antes eram resolvidas pelo desenvolvedor, o que otimiza bastante o desenvolvimento e evita bugs/brechas no codigo.
+- a estrutura do projeto ficou da seguinte forma:
+
+```Shell
+[...]
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── praticas
+│   │   │       └── microprojeto_04
+│   │   │           ├── controller
+│   │   │           │   └── PetController.java
+│   │   │           ├── dto
+│   │   │           │   ├── CreatePetRequestDTO.java
+│   │   │           │   ├── ErrorResponseDTO.java
+│   │   │           │   ├── PetResponseDTO.java
+│   │   │           │   └── UpdatePetRequestDTO.java
+│   │   │           ├── entity
+│   │   │           │   └── Pet.java
+│   │   │           ├── exception
+│   │   │           │   ├── ApiExceptionHandler.java
+│   │   │           │   ├── BusinessException.java
+│   │   │           │   ├── PetAlreadyDeletedException.java
+│   │   │           │   └── PetNotFoundException.java
+│   │   │           ├── Microprojeto04Application.java
+│   │   │           ├── repository
+│   │   │           │   └── PetRepository.java
+│   │   │           └── service
+│   │   │               └── PetService.java
+[...]
+```
 
 ---
 
@@ -500,6 +554,10 @@ mvn spring-boot:run
 ```Shell
 curl -v -X DELETE http://localhost:8080/pets/5 -o resposta.txt
 ```
+
+
+
+- Houve ainda comandos Docker que usei via Makefile e podem ser encontrados no próprio Makefile disponível no repositório.
 
 ---
 
@@ -600,3 +658,7 @@ curl -v -X DELETE http://localhost:8080/pets/5 -o resposta.txt
 [17.2] [apichangelog-substack-com.translate.goog/p/http-204-is-the-best-delete-response?_x_tr_sl=en&amp;_x_tr_tl=pt&amp;_x_tr_hl=pt&amp;_x_tr_pto=tc&amp;_x_tr_hist=true](https://apichangelog-substack-com.translate.goog/p/http-204-is-the-best-delete-response?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc&_x_tr_hist=true)
 
 [17.3] [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/DELETE](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/DELETE)
+
+[17.4] [datatracker.ietf.org/doc/html/rfc7231#section-6.5.8](https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.8)
+
+[18] [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/201](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/201)

@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
+import praticas.microprojeto_04.dto.CreatePetRequestDTO;
 import praticas.microprojeto_04.dto.PetResponseDTO;
 import praticas.microprojeto_04.dto.UpdatePetRequestDTO;
 import praticas.microprojeto_04.entity.Pet;
@@ -47,6 +48,34 @@ public class PetService {
 	    return toResponse(updatedPet);
 	}
 	
+	public void delete(Long id) {
+		Pet pet = repository.findById(id).orElseThrow(() -> new PetNotFoundException(id));
+		pet.markAsDeleted();
+		repository.save(pet);
+	}
+	
+	public PetResponseDTO create(CreatePetRequestDTO requestDTO) {
+		LocalDateTime now = LocalDateTime.now();
+		
+		Pet pet = Pet.builder() 
+				.name(requestDTO.name())
+				.species(requestDTO.species())
+				.breed(requestDTO.breed())
+				.color(requestDTO.color())
+				.weight(requestDTO.weight())
+				.vaccinated(requestDTO.vaccinated())
+				.birthDate(requestDTO.birthDate())
+				.notes(requestDTO.notes())
+				.deleted(Boolean.FALSE)
+				.created_at(now)
+				.updated_at(now)
+				.build();
+		
+		Pet createdPet = repository.save(pet);
+		
+		return toResponse(createdPet);
+	}
+
 	private PetResponseDTO toResponse(Pet pet) {
 		return PetResponseDTO.builder()
 				.id(pet.getId())
@@ -56,9 +85,4 @@ public class PetService {
 				.build();
 	}
 	
-	public void delete(Long id) {
-		Pet pet = repository.findById(id).orElseThrow(() -> new PetNotFoundException(id));
-		pet.markAsDeleted();
-		repository.save(pet);
-	}
 }
