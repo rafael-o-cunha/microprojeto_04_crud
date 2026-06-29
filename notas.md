@@ -2,7 +2,6 @@
 
 > O Código apresentado aqui está longe de ser perfeito. Meu foco será exclusivamente na prática de funcionalidades CRUD realizando um sobrevoo na estrutura de projeto e recursos que o framework Spring Boot oferece, que é o tema central deste artigo. Então, caro programador experiente que está lendo isso, peço que não se preocupe demais com outras questões como arquitetura ou boas práticas. foco no essencial!
 
-
 ## Criar, configurar e iniciar o projeto (1)
 
 ### Setup base
@@ -261,7 +260,6 @@ init.sql
   - Neste caso foi criado um DTO simples de Response chamado de `PetResponseDTO` e utilizado anotação do LomBok `@Builder` [8]
 - para injeção de dependência geralmente usa-se `@Autowired` em cada dependência no Spring Boot, porém ao usar `@RequiredArgsConstructor` do LomBok na classe é realizado a criação automática do construtor da classe realizando a injeção das dependências pelo construtor, tornando desnecessário o uso da anotação do Spring Boot [9]
 
-
 ```Java
 //anotações de classe
 
@@ -279,13 +277,11 @@ init.sql
 @GetMapping			//anotação usada no método para indicar que ele será usado para Web Request via método Get neste controlador(pode conter query params e value com rota)
 ```
 
-
 - o uso do lombok elimina muito código boilerplate e ajuda em outras atividades e padrões de projeto durante o desenvolvimento, o código gerado por ser consultado na pasta target, no caso deste projeto pode ser visto da seguinte forma:
 
 ```Shell
 javap -p target/classes/praticas/microprojeto_04/entity/Pet.class
 ```
-
 
 - a estrutura atual do projeto com a requisição que lista todos os Pets fica da forma abaixo:
 
@@ -310,12 +306,10 @@ javap -p target/classes/praticas/microprojeto_04/entity/Pet.class
 [...]
 ```
 
-
 - No Controller que servirá os endpoints REST o retorno será do tipo `ResponseEntity` pois ele **representa a resposta HTTP completa** , não apenas o objeto que será serializado em JSON. [10]
 
   - A ideia de utilizá-lo é para evitar de controlar apenas o corpo da resposta, com isso será possível ter de uma vez o Status HTTP, Cabeçalhos e Corpo representados no objeto e tratados pelo Spring Boot na resposta.
 - a saída para a requisição do Cliente foi um JSON com a lista de PETs cadastrados no pets_db (Postgres)
-
 
 ---
 
@@ -360,8 +354,6 @@ Pet com o id 1000 não foi encontrado.
 
 - Pra alcançar esse ponto, que é mais satisfatório precisei usar algumas annotations e percebi que o Spring Boot disponibiliza argumentos injetáveis e os resolve quando solicitados [14]
 
-
-
 ```Java
 //anotações de classe
 
@@ -372,19 +364,108 @@ Pet com o id 1000 não foi encontrado.
 @ExceptionHandler(PetNotFoundException.class)  //diz que o método trata exceções do tipo especificado
 ```
 
-
 ---
 
 ## criar funcionalidade de edição (6)
 
-- [ ] criar funcionalidde de edição de uma unidade
+- [X] criar funcionalidde de edição de uma unidade
+
+- neste ponto a quantidade de código criada começou a ficar menor, dado que já existem recursos para retornar DTO de response, assim como tratamento de exceção, além disso o JPA já oferece métodos CRUD criados e implementados para evitar a criação de código boilerplate, com isso basta chamar o método `save(T)` do repository que será executado um save para criação ou neste caso save para edição pois o JPA está gerenciando a entidade, inclusive pelo fato da entidade ter ID presente.
+- Como neste caso está sendo realizado `PUT`será realizado atribuição de possível substituição de todos os dados do registro [15].
+- foi enviado um `JSON` completo como o exemplo abaixo:
+
+```JSON
+    {
+        "name": "Mia",
+        "species": "CAT",
+        "breed": "Tiger",
+        "color":"Black",
+        "weight":9.5,
+        "vaccinated":true,
+        "birthDate":"2020-03-10",
+        "notes":"Healthy - updated"
+    }
+```
+
+- a resposta retorno corretamente com status 200 e em caso de passar um ID que não existe  a resposta retorna corretamente o `JSON`com status 404.
+- Obs.: para evitar problemas o interessante é **validar os dados recebidos** para evitar que dados sensíveis sejam salvos em branco, então a stack junto com o framework facilita esse tipo de validação, e caso não passe o 404 poderá retornar uma mensagem mais rica em informações mostrando quais dados faltaram, porém **este tema ficará para o próximo microprojeto**, onde o foco será em cadastro e update de registros e partes de registros com dados validados.
+
 
 ---
 
 ## criar deleção de unidade de registro (7)
 
-- [ ] criar funcionalidade de seleção de unidade a partir da listagem de dados
-- [ ] usar soft Delete.
+- [X] usar soft Delete. [16]
+
+- para o soft delete foi implementado fazendo reúso dos recursos já criados além de implementar alguns itens a mais para dar formalidade e prática ao projeto, como uso de status code http diferente entre chamadas do delete e exception personalizada para esse caso.
+- o método de soft delete usado foi atualizar o valor de 2 atributos, o `deleted` e o `updated_at` em conjunto e realizar uma operação de save no banco, porém o `Spring/JPA` oferencem um recurso mais semântico para implementação do soft delete onde a operação completa de delete é realizada pela aplicação, porém no momento de executar será identificado o uso da annotation ``@SQLDelete`` na entidade realizando um "Override" da operação, nesta anotação pode-se criar o sql necessário para atualização conforme exemplo abaixo e simplificando mais a escrita de código em diversas operações de delete. [16 ]
+- eu implelentei o modo mais simples, alterando os dois atributos como mencionado e coloquei um método `maskAsDeleted` com validação+exceptiion na entidade, assim o service não precisa manipular 2 atributos de forma independente, apenas chamar o método do domínio.
+
+```Java
+@SQLDelete(sql = "UPDATE tbl_products SET deleted = true WHERE id=?")
+public class Product {}
+```
+
+- existem várias estratégias: como implementar anotação  `@Where` na classe, implementar anotação de alterar a operação SQL realizada ``@SQLDelete``(como no exemplo acima), realizar a operação manualmente a cada delete, assim como a implementação de interfaces para que cada entidade possa implementar o soft ou hard delete via contrato. ou seja, o sprin-boot permite o uso de diversas estratégias e auxilia o uso de várias, o uso então se torna uma questão de governança e estratégia do time técnico [16]
+- Uma observação a ser testada é a identificação de Log da aplicação, pois enquanto uma operação pode ser escrita como `delete` na conversão para o SQL final outra será um `update`, algo que vou criar um experimento em outro momento para ver as possíveis formas de tratar isso.
+- Outro ponto interessante é a decisão de qual Status HTTP emitir na resposta para o cliente, pois APIs REST procuram ter Indepotência, e múltiplas chamadas no mesmo endpoint com mesmo ID deveriam entregar a mesma resposta, porém decidi entregar respostas diferentes, que a nível de neǵocio pode ser entendida como igual, porém a nível técnico é diferente. [17]
+
+  - explicando o ponto acima: na primeira chamda a API irá retornar `204` e se a chamada fosse repetida  muitas APIs retornariam novamente `204`.
+  - eu decidi implementar uma saída informando que o conteúdo já havia sido excluído, isso muda a perspectiva do client, ele entende que a operação que realizou na requisição não teve efeito prático, pois o recurso já havia sido excluído, então como resultado ele entende "está deletado" porém sabendo que "não fui eu, mas está deletado",  então temos a igualdade de que "está deletado" porém contextualizando que a operação atual realizou ou não esse delete.
+
+  ```Shell
+  //primeira requisição 
+
+  * Host localhost:8080 was resolved.
+  * IPv6: ::1
+  * IPv4: 127.0.0.1
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8080...
+  * Connected to localhost (::1) port 8080
+  > DELETE /pets/5 HTTP/1.1
+  > Host: localhost:8080
+  > User-Agent: curl/8.5.0
+  > Accept: */*
+  > 
+  < HTTP/1.1 204 
+  < 
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+  * Connection #0 to host localhost left intact
+
+
+  //segunda requisição 
+  * Host localhost:8080 was resolved.
+  * IPv6: ::1
+  * IPv4: 127.0.0.1
+    % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                   Dload  Upload   Total   Spent    Left  Speed
+    0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8080...
+  * Connected to localhost (::1) port 8080
+  > DELETE /pets/5 HTTP/1.1
+  > Host: localhost:8080
+  > User-Agent: curl/8.5.0
+  > Accept: */*
+  > 
+  < HTTP/1.1 409 
+  < Content-Type: application/json
+  < Transfer-Encoding: chunked
+  < 
+  { [143 bytes data]
+  100   143    0   143    0     0  21426      0 --:--:-- --:--:-- --:--:-- 23833
+  * Connection #0 to host localhost left intact
+
+  //a segunda requisição direcionada para um arquivo:
+  {
+  	"timestamp":"...",
+  	"status":409,
+      	"error":"Conflict",
+      	"message":"O pet com id 5 já está excluído.",
+      	"path":"/pets/5"
+  }
+  ```
+
+
 
 ---
 
@@ -392,14 +473,33 @@ Pet com o id 1000 não foi encontrado.
 
 - [ ] cadastrar pet
 
+
+
+
 ---
 
 ### Comandos usados
 
 - limpar projeto e realizar rebuild baixando dependências se necessário.
-- ```b
-  mvn clean package
-  ```
+
+```Shell
+mvn clean package
+```
+
+
+
+- rodar a aplicação via terminal
+
+```Shell
+mvn spring-boot:run
+```
+
+
+- Usando CURL para teste
+
+```Shell
+curl -v -X DELETE http://localhost:8080/pets/5 -o resposta.txt
+```
 
 ---
 
@@ -427,11 +527,11 @@ Pet com o id 1000 não foi encontrado.
 
 [4.1] https://medium.com/@maneakanksha772/debugging-java-inside-a-docker-container-a-survival-guide-c2eee1655434
 
-[5] [www.geeksforgeeks.org/java/spring-boot-crud-operations](https://www.geeksforgeeks.org/java/spring-boot-crud-operations/) 
+[5] [www.geeksforgeeks.org/java/spring-boot-crud-operations](https://www.geeksforgeeks.org/java/spring-boot-crud-operations/)
 
 [5.1] [dev.to/akash_vadakkeveetil/basic-crud-using-java-spring-boot-2l07](https://dev.to/akash_vadakkeveetil/basic-crud-using-java-spring-boot-2l07)
 
-[6] [medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235](https://medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235) 
+[6] [medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235](https://medium.com/@zambuzesilva/dominando-o-spring-data-jpa-t%C3%A9cnicas-avan%C3%A7adas-para-consultas-eficientes-39e8c51c0235)
 
 [6.1] [www.baeldung.com/spring-data-derived-queries](https://www.baeldung.com/spring-data-derived-queries)
 
@@ -480,3 +580,23 @@ Pet com o id 1000 não foi encontrado.
 [13.4] [docs.spring.io/spring-framework/reference/web/webflux/controller/ann-advice.html](https://docs.spring.io/spring-framework/reference/web/webflux/controller/ann-advice.html)
 
 [14] [medium.com/@AlexanderObregon/how-spring-boot-configures-custom-argument-resolvers-ed4833420549](https://medium.com/@AlexanderObregon/how-spring-boot-configures-custom-argument-resolvers-ed4833420549)
+
+[15]  [medium.com/@gabrielrufino.js/put-vs-patch-pare-de-agora-escolher-errado-533b8c6058d9](https://medium.com/@gabrielrufino.js/put-vs-patch-pare-de-agora-escolher-errado-533b8c6058d9)
+
+[15.1] la.org/pt-BR/docs/Web/HTTP/Reference/Methods/PUT
+
+[15.2]  [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/PATCH](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/PATCH)
+
+[16] [medium.com/@AlexanderObregon/hard-delete-vs-soft-delete-logic-in-spring-boot-services-747798a601f9](https://medium.com/@AlexanderObregon/hard-delete-vs-soft-delete-logic-in-spring-boot-services-747798a601f9)
+
+[16.1] [www.baeldung.com/spring-jpa-soft-delete](https://www.baeldung.com/spring-jpa-soft-delete)
+
+[16.2] [medium.com/@samrat.alam/soft-delete-in-spring-boot-jpa-best-practices-real-world-implementation-2d831e60bb3e](https://medium.com/@samrat.alam/soft-delete-in-spring-boot-jpa-best-practices-real-world-implementation-2d831e60bb3e)
+
+[17] [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/409](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/409)
+
+[17.1] [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/204](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Status/204)
+
+[17.2] [apichangelog-substack-com.translate.goog/p/http-204-is-the-best-delete-response?_x_tr_sl=en&amp;_x_tr_tl=pt&amp;_x_tr_hl=pt&amp;_x_tr_pto=tc&amp;_x_tr_hist=true](https://apichangelog-substack-com.translate.goog/p/http-204-is-the-best-delete-response?_x_tr_sl=en&_x_tr_tl=pt&_x_tr_hl=pt&_x_tr_pto=tc&_x_tr_hist=true)
+
+[17.3] [developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/DELETE](https://developer.mozilla.org/pt-BR/docs/Web/HTTP/Reference/Methods/DELETE)

@@ -1,11 +1,13 @@
 package praticas.microprojeto_04.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
 import praticas.microprojeto_04.dto.PetResponseDTO;
+import praticas.microprojeto_04.dto.UpdatePetRequestDTO;
 import praticas.microprojeto_04.entity.Pet;
 import praticas.microprojeto_04.exception.PetNotFoundException;
 import praticas.microprojeto_04.repository.PetRepository;
@@ -22,9 +24,27 @@ public class PetService {
 	}
 	
 	public PetResponseDTO findById(Long id) {
-		Pet pet = repository.findByIdAndDeletedFalse(id)
-				.orElseThrow(() -> new PetNotFoundException(id));
+		Pet pet = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new PetNotFoundException(id));
 		return toResponse(pet);
+	}
+	
+	public PetResponseDTO update(Long id, UpdatePetRequestDTO requestDTO) {
+		
+		Pet pet = repository.findByIdAndDeletedFalse(id).orElseThrow(() -> new PetNotFoundException(id));
+		
+		pet.setName(requestDTO.name());
+	    pet.setSpecies(requestDTO.species());
+	    pet.setBreed(requestDTO.breed());
+	    pet.setColor(requestDTO.color());
+	    pet.setWeight(requestDTO.weight());
+	    pet.setVaccinated(requestDTO.vaccinated());
+	    pet.setBirthDate(requestDTO.birthDate());
+	    pet.setNotes(requestDTO.notes());
+	    pet.setUpdated_at(LocalDateTime.now());
+	    
+	    Pet updatedPet = repository.save(pet);
+	    
+	    return toResponse(updatedPet);
 	}
 	
 	private PetResponseDTO toResponse(Pet pet) {
@@ -34,5 +54,11 @@ public class PetService {
 				.species(pet.getSpecies())
 				.breed(pet.getBreed())
 				.build();
+	}
+	
+	public void delete(Long id) {
+		Pet pet = repository.findById(id).orElseThrow(() -> new PetNotFoundException(id));
+		pet.markAsDeleted();
+		repository.save(pet);
 	}
 }

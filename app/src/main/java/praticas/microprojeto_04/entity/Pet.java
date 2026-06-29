@@ -15,6 +15,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import praticas.microprojeto_04.exception.PetAlreadyDeletedException;
 
 @Getter
 @Setter
@@ -61,4 +62,16 @@ public class Pet {
 	
 	@Column(name = "updated_at")
 	private LocalDateTime updated_at;
+
+	public void markAsDeleted() {
+		validateDeletion();
+		deleted = true;
+		updated_at = LocalDateTime.now();
+	}
+	
+	private void validateDeletion() {
+		if(Boolean.TRUE.equals(deleted)) {
+			throw new PetAlreadyDeletedException(id);
+		}
+	}
 }

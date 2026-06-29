@@ -15,14 +15,22 @@ public class ApiExceptionHandler {
 	
 	@ExceptionHandler(PetNotFoundException.class)
 	public ResponseEntity<ErrorResponseDTO> handlePetNotFound(PetNotFoundException ex, HttpServletRequest  request) {
-		
+		return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage(), request);
+	}
+	
+	@ExceptionHandler(PetAlreadyDeletedException.class)
+	public ResponseEntity<ErrorResponseDTO> handlePetAlreadyDeleted(PetAlreadyDeletedException ex, HttpServletRequest request) {
+		return buildErrorResponse(HttpStatus.CONFLICT, ex.getMessage(), request);
+	}
+	
+	private ResponseEntity<ErrorResponseDTO> buildErrorResponse(HttpStatus status, String message, HttpServletRequest request) {
 		ErrorResponseDTO error = new ErrorResponseDTO(
 				LocalDateTime.now(),
-				HttpStatus.NOT_FOUND.value(),
-				HttpStatus.NOT_FOUND.getReasonPhrase(),
-				ex.getMessage(),
+				status.value(),
+				status.getReasonPhrase(),
+				message,
 				request.getRequestURI());
 		
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+		return ResponseEntity.status(status).body(error);
 	}
 }
