@@ -390,7 +390,6 @@ Pet com o id 1000 não foi encontrado.
 - a resposta retorno corretamente com status 200 e em caso de passar um ID que não existe  a resposta retorna corretamente o `JSON`com status 404.
 - Obs.: para evitar problemas o interessante é **validar os dados recebidos** para evitar que dados sensíveis sejam salvos em branco, então a stack junto com o framework facilita esse tipo de validação, e caso não passe o 404 poderá retornar uma mensagem mais rica em informações mostrando quais dados faltaram, porém **este tema ficará para o próximo microprojeto**, onde o foco será em cadastro e update de registros e partes de registros com dados validados.
 
-
 ---
 
 ## criar deleção de unidade de registro (7)
@@ -465,8 +464,6 @@ public class Product {}
   }
   ```
 
-
-
 ---
 
 ## criar cadastro de unidade de registro (9)
@@ -490,8 +487,6 @@ public class Product {}
         "notes":"Healthy - created"
     }
 ```
-
-
 
 ---
 
@@ -540,22 +535,17 @@ public class Product {}
 mvn clean package
 ```
 
-
-
 - rodar a aplicação via terminal
 
 ```Shell
 mvn spring-boot:run
 ```
 
-
 - Usando CURL para teste
 
 ```Shell
 curl -v -X DELETE http://localhost:8080/pets/5 -o resposta.txt
 ```
-
-
 
 - Houve ainda comandos Docker que usei via Makefile e podem ser encontrados no próprio Makefile disponível no repositório.
 
