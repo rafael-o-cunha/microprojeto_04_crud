@@ -21,19 +21,6 @@
     </a>
   </span>
 
-  <span>
-    <a href="https://github.com/rafael-o-cunha/microprojeto_04_crud/blob/springboot_jpa/README_EN.md">
-      <img src="https://img.shields.io/badge/-English-blue?style=for-the-badge" alt="English">
-    </a>
-  </span>
-
-  <span>
-    <a href="https://github.com/rafael-o-cunha/microprojeto_04_crud/blob/springboot_jpa/README_ES.md">
-      <img src="https://img.shields.io/badge/-Español-red?style=for-the-badge" alt="Español">
-    </a>
-  </span>
-</div>
-
 ---
 
 # 📋 Resumo
@@ -43,6 +30,10 @@ CRUD Pets é um microprojeto backend desenvolvido com **Java 23** e **Spring Boo
 A aplicação implementa um CRUD completo para gerenciamento de Pets, contemplando operações de criação, consulta, atualização e remoção lógica (**Soft Delete**), utilizando persistência com Spring Data JPA e PostgreSQL.
 
 Mais do que implementar um CRUD, este projeto foi concebido como um laboratório prático para consolidar conceitos fundamentais do ecossistema Spring Boot utilizados em aplicações corporativas.
+
+
+![1783130811914](readme_resources/system_design.png)
+
 
 ---
 
@@ -185,13 +176,13 @@ Padronização do ambiente utilizando:
 
 # 📘 Endpoints
 
-| Método | Endpoint | Descrição |
-| ------- | -------- | --------- |
-| POST | `/pets` | Criar Pet |
-| GET | `/pets` | Listar Pets |
-| GET | `/pets/{id}` | Buscar Pet |
-| PUT | `/pets/{id}` | Atualizar Pet |
-| DELETE | `/pets/{id}` | Soft Delete |
+| Método | Endpoint       | Descrição   |
+| ------- | -------------- | ------------- |
+| POST    | `/pets`      | Criar Pet     |
+| GET     | `/pets`      | Listar Pets   |
+| GET     | `/pets/{id}` | Buscar Pet    |
+| PUT     | `/pets/{id}` | Atualizar Pet |
+| DELETE  | `/pets/{id}` | Soft Delete   |
 
 ---
 
@@ -222,10 +213,10 @@ A API possui tratamento global de exceções através do `@RestControllerAdvice`
 
 Atualmente são tratados:
 
-| Status HTTP | Situação |
-|-------------|----------|
+| Status HTTP   | Situação          |
+| ------------- | ------------------- |
 | 404 Not Found | Pet não encontrado |
-| 409 Conflict | Pet já removido |
+| 409 Conflict  | Pet já removido    |
 
 Todas as respostas seguem um padrão JSON:
 

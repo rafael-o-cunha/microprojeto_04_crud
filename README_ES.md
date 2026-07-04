@@ -1,6 +1,6 @@
 <p align="center">
   <h1>
-    Microproyecto: CRUD de Mascotas
+    Microproyecto: CRUD de Pets
   </h1>
 </p>
 
@@ -38,11 +38,15 @@
 
 # 📋 Resumen
 
-CRUD de Mascotas es un microproyecto backend desarrollado con **Java 23** y **Spring Boot**, creado con el objetivo de practicar la implementación completa de una API REST utilizando una arquitectura por capas.
+CRUD de Pets es un microproyecto backend desarrollado con **Java 23** y **Spring Boot**, creado con el objetivo de practicar la implementación completa de una API REST utilizando una arquitectura por capas.
 
-La aplicación implementa un CRUD completo para la gestión de mascotas, incluyendo operaciones de creación, consulta, actualización y eliminación lógica (**Soft Delete**), utilizando Spring Data JPA y PostgreSQL como mecanismo de persistencia.
+La aplicación implementa un CRUD completo para la gestión de Pets, incluyendo operaciones de creación, consulta, actualización y eliminación lógica (**Soft Delete**), utilizando Spring Data JPA y PostgreSQL como mecanismo de persistencia.
 
 Más que implementar simplemente un CRUD, este proyecto fue concebido como un laboratorio práctico para consolidar los conceptos fundamentales del ecosistema Spring Boot utilizados en aplicaciones empresariales.
+
+
+![1783130811914](readme_resources/system_design_es.png)
+
 
 ---
 
@@ -188,7 +192,7 @@ Estandarización del entorno de desarrollo utilizando:
 | Método | Endpoint | Descripción |
 | ------- | -------- | ----------- |
 | POST | `/pets` | Crear Mascota |
-| GET | `/pets` | Listar Mascotas |
+| GET | `/pets` | Listar Pets |
 | GET | `/pets/{id}` | Buscar Mascota por ID |
 | PUT | `/pets/{id}` | Actualizar Mascota |
 | DELETE | `/pets/{id}` | Soft Delete |

@@ -44,6 +44,10 @@ The application implements a complete CRUD for Pet management, including create,
 
 More than simply implementing a CRUD application, this project was designed as a practical laboratory to consolidate the fundamental concepts of the Spring Boot ecosystem commonly used in enterprise applications.
 
+
+![1783130811914](readme_resources/system_design_en.png)
+
+
 ---
 
 > **⚠️ About this microproject**
